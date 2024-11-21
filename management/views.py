@@ -1,11 +1,12 @@
 from django.contrib.auth.views import LoginView
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
 from .decorators import role_required
 from .models import Patient, Room, Staff
 from .utils import create_account, create_room, create_patient
+from .forms import AssignRoomForm
 
 
 @login_required
@@ -88,6 +89,14 @@ def add_room(request):
                 'error': 'Fields required: Room number, Type',
                 'rooms': Room.objects.all()
             })
+
+        if room_type == 'PATIENT' and not capacity:
+            return render(request, 'room_list.html', {
+                'error': 'Capacity is required for Patient rooms.',
+                'rooms': Room.objects.all()
+            })
+        if room_type != 'PATIENT' and not capacity:
+            capacity = None
 
         create_room(room_number, room_type, capacity, description)
 
@@ -274,3 +283,30 @@ def home(request):
 
 class CustomLoginView(LoginView):
     template_name = 'login.html'
+
+
+@login_required
+@role_required('ADMIN')
+def assign_patient_to_room(request, patient_id):
+    patient = get_object_or_404(Patient, id=patient_id)
+    
+    # Pobierz wszystkie pokoje z bazy danych
+    rooms = Room.objects.all()
+
+    if request.method == 'POST':
+        room_id = request.POST.get('room_id')
+        room = get_object_or_404(Room, id=room_id)
+
+        # Sprawdzenie, czy w pokoju są dostępne miejsca
+        if room.get_available_spaces() > 0:
+            patient.assigned_room = room
+            patient.save()
+            return redirect('patient_list')  # lub odpowiednia strona po przypisaniu
+        else:
+            return render(request, 'assign_room.html', {
+                'patient': patient,
+                'rooms': rooms,
+                'error': 'No available spaces in this room.'
+            })
+    
+    return render(request, 'assign_room.html', {'patient': patient, 'rooms': rooms})

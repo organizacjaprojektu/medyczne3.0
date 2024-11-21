@@ -16,6 +16,7 @@
                 <th scope="col">Last Name</th>
                 <th scope="col">Birth Date</th>
                 <th scope="col">Registered By</th>
+                <th scope="col">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -27,6 +28,7 @@
                 <td>{{ patient.registered_by }}</td>
                 <td>
                     <button class="btn btn-primary" onclick="openEditPatientForm({{ patient.id }})">Edit</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='{% url 'assign_patient_to_room' patient.id %}'">Assign Room</button>
                     <button class="btn btn-danger" onclick="confirmDeletePatient({{ patient.id }})">Delete</button>
                 </td>
             </tr>

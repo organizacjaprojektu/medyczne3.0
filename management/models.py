@@ -18,6 +18,13 @@ class Room(models.Model):
     def __str__(self):
         return f"{self.name} ({self.type})"
 
+    def get_available_spaces(self):
+        if self.capacity is None:
+            return 0
+        # Liczba pacjentów przypisanych do pokoju
+        assigned_patients = Patient.objects.filter(assigned_room=self).count()
+        return self.capacity - assigned_patients
+
     def clean(self):
         from django.core.exceptions import ValidationError
         # Validate that capacity is only set for patient rooms
@@ -33,6 +40,7 @@ class Patient(models.Model):
     birth_date = models.DateField()
     registration_date = models.DateTimeField(auto_now_add=True)
     registered_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    assigned_room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
