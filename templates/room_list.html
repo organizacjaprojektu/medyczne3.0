@@ -1,12 +1,62 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Room List{% endblock %}
 
 {% block content %}
     <h1 class="mt-4">Room List</h1>
     {% if user_role == 'ADMIN' %}
-        <p>ADMIN OPTION ONLY</p>
-        {% include 'forms/form_add_room.html' %}
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+            Add Room
+        </button>
+        <!-- Add Room Modal -->
+        <div class="modal fade" id="addRoomModal" tabindex="-1" aria-labelledby="addRoomModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addRoomModalLabel">Add Room</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% include 'forms/form_add_room.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Room Modal -->
+        <div class="modal fade" id="editRoomModal" tabindex="-1" aria-labelledby="editRoomModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editRoomModalLabel">Edit Room</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="form_edit_room">
+                            {% csrf_token %}
+                            <input type="hidden" name="room_id" id="edit_room_id">
+                            <div class="mb-3">
+                                <label for="edit_room_number" class="form-label">Room Number</label>
+                                <input type="text" class="form-control" id="edit_room_number" name="room_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_type" class="form-label">Type</label>
+                                <select class="form-select" id="edit_type" name="type" required>
+                                    <option value="OPERATING">Operating Room</option>
+                                    <option value="CONSULTATION">Consultation Room</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_description" class="form-label">Description</label>
+                                <textarea class="form-control" id="edit_description" name="description"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endif %}
     <table class="table table-striped mt-3">
         <thead>
@@ -14,6 +64,7 @@
                 <th scope="col">Room Number</th>
                 <th scope="col">Type</th>
                 <th scope="col">Description</th>
+                <th scope="col">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -22,8 +73,13 @@
                 <td>{{ room.room_number }}</td>
                 <td>{{ room.type }}</td>
                 <td>{{ room.description }}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="openEditRoomForm({{ room.id }})">Edit</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteRoom({{ room.id }})">Delete</button>
+                </td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
+    <script src="{% static 'js/room.js' %}"></script>
 {% endblock %}

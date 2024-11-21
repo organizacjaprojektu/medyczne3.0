@@ -1,4 +1,5 @@
 from django.contrib.auth.views import LoginView
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
@@ -95,6 +96,169 @@ def add_room(request):
         })
 
     return render(request, 'room_list.html', {'rooms': Room.objects.all()})
+
+@login_required
+@login_required
+@role_required('ADMIN')
+def edit_patient(request):
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient_id')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        dob = request.POST.get('dob')
+
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            patient.first_name = first_name
+            patient.last_name = last_name
+            patient.birth_date = dob
+            patient.save()
+
+            return JsonResponse({'success': True, 'message': 'Patient updated successfully.'})
+        except Patient.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Patient not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request.'})
+
+
+@login_required
+@role_required('ADMIN')
+def get_patient(request, patient_id):
+    patient = Patient.objects.get(id=patient_id)
+    data = {
+        'id': patient.id,
+        'first_name': patient.first_name,
+        'last_name': patient.last_name,
+        'birth_date': patient.birth_date.isoformat(),
+    }
+    return JsonResponse(data)
+
+
+@login_required
+@role_required('ADMIN')
+def delete_patient(request, patient_id):
+    if request.method == 'DELETE':
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            patient.delete()
+            return JsonResponse({'success': True, 'message': 'Patient deleted successfully.'})
+        except Patient.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Patient not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+@login_required
+@role_required('ADMIN')
+def edit_staff(request, staff_id):
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        position = request.POST.get('position')
+        role = request.POST.get('role')
+
+        try:
+            staff = Staff.objects.get(id=staff_id)
+            staff.first_name = first_name
+            staff.last_name = last_name
+            staff.position = position
+            staff.role = role
+            staff.save()
+
+            return JsonResponse({'success': True, 'message': 'Staff updated successfully.'})
+        except Staff.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Staff not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+@login_required
+@role_required('ADMIN')
+def delete_staff(request, staff_id):
+    if request.method == 'DELETE':
+        try:
+            staff = Staff.objects.get(id=staff_id)
+            staff.delete()
+            return JsonResponse({'success': True, 'message': 'Staff deleted successfully.'})
+        except Staff.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Staff not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+@login_required
+@role_required('ADMIN')
+def get_staff(request, staff_id):
+    staff = Staff.objects.get(id=staff_id)
+    data = {
+        'id': staff.id,
+        'first_name': staff.first_name,
+        'last_name': staff.last_name,
+        'position': staff.position,
+        'role': staff.role,
+    }
+    return JsonResponse(data)
+
+
+@login_required
+@role_required('ADMIN')
+def edit_room(request, room_id):
+    if request.method == 'POST':
+        room_number = request.POST.get('room_number')
+        room_type = request.POST.get('type')
+        description = request.POST.get('description')
+
+        try:
+            room = Room.objects.get(id=room_id)
+            room.room_number = room_number
+            room.type = room_type
+            room.description = description
+            room.save()
+
+            return JsonResponse({'success': True, 'message': 'Room updated successfully.'})
+        except Room.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Room not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request.'})
+
+
+@login_required
+@role_required('ADMIN')
+def get_room(request, room_id):
+    room = Room.objects.get(id=room_id)
+    data = {
+        'id': room.id,
+        'room_number': room.room_number,
+        'type': room.type,
+        'description': room.description,
+    }
+    return JsonResponse(data)
+
+
+@login_required
+@role_required('ADMIN')
+def delete_room(request, room_id):
+    if request.method == 'DELETE':
+        try:
+            room = Room.objects.get(id=room_id)
+            room.delete()
+            return JsonResponse({'success': True, 'message': 'Room deleted successfully.'})
+        except Room.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Room not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
 @login_required
 def home(request):
     return render(request, 'home.html')

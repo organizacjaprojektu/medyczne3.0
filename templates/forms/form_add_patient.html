@@ -1,17 +1,51 @@
 {% if error %}
-    <p style="color:red;">{{ error }}</p>
+    <p class="text-danger">{{ error }}</p>
 {% endif %}
 {% if success %}
-    <p style="color:green;">{{ success }}</p>
+    <p class="text-success">{{ success }}</p>
 {% endif %}
 
-<form method="post" action="{% url 'add_patient' %}">
+<form method="post" action="{% url 'add_patient' %}" class="needs-validation" novalidate>
     {% csrf_token %}
-    <label for="first_name">First Name:</label>
-    <input type="text" name="first_name" id="first_name" required><br>
-    <label for="last_name">Last Name:</label>
-    <input type="text" name="last_name" id="last_name" required><br>
-    <label for="dob">Date of Birth:</label>
-    <input type="date" name="dob" id="dob" required><br>
-    <button type="submit">Add Patient</button>
+    <div class="mb-3">
+        <label for="first_name" class="form-label">First Name:</label>
+        <input type="text" class="form-control" name="first_name" id="first_name" required>
+        <div class="invalid-feedback">
+            Please provide a first name.
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="last_name" class="form-label">Last Name:</label>
+        <input type="text" class="form-control" name="last_name" id="last_name" required>
+        <div class="invalid-feedback">
+            Please provide a last name.
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="dob" class="form-label">Date of Birth:</label>
+        <input type="date" class="form-control" name="dob" id="dob" required>
+        <div class="invalid-feedback">
+            Please provide a date of birth.
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Patient</button>
 </form>
+
+<script>
+(() => {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', () => {
+        const forms = document.querySelectorAll('.needs-validation');
+
+        Array.from(forms).forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+})();
+</script>
