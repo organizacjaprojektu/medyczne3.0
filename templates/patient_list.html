@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient List{% endblock %}
+
+{% block content %}
+    <h1 class="mt-4">Patient List</h1>
+    {% if user_role == 'ADMIN' %}
+        <p>ADMIN OPTION ONLY</p>
+        {% include 'forms/form_add_patient.html' %}
+    {% endif %}
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Birth Date</th>
+                <th scope="col">Registered By</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for patient in patients %}
+            <tr>
+                <td>{{ patient.first_name }}</td>
+                <td>{{ patient.last_name }}</td>
+                <td>{{ patient.birth_date }}</td>
+                <td>{{ patient.registered_by }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endblock %}
