@@ -7,6 +7,19 @@ function openEditRoomForm(roomId) {
             document.getElementById('edit_type').value = data.type;
             document.getElementById('edit_description').value = data.description;
 
+            // Obsługa pola `capacity` - pokaż/ukryj w zależności od typu pokoju
+            const capacityContainer = document.getElementById('edit_capacity_container');
+            const capacityInput = document.getElementById('edit_capacity');
+
+            if (data.type === 'PATIENT') {
+                capacityContainer.style.display = 'block';
+                capacityInput.value = data.capacity || ''; // Ustaw wartość z odpowiedzi
+            } else {
+                capacityContainer.style.display = 'none';
+                capacityInput.value = '';
+            }
+
+            // Otwórz modal
             var editRoomModal = new bootstrap.Modal(document.getElementById('editRoomModal'));
             editRoomModal.show();
         });
@@ -19,12 +32,19 @@ document.getElementById('form_edit_room').addEventListener('submit', function(ev
     const roomNumber = document.getElementById('edit_room_number').value;
     const type = document.getElementById('edit_type').value;
     const description = document.getElementById('edit_description').value;
+    const capacity = document.getElementById('edit_capacity').value;
 
     const formData = new FormData();
     formData.append('room_id', roomId);
     formData.append('room_number', roomNumber);
     formData.append('type', type);
     formData.append('description', description);
+    // Dodaj pole `capacity` tylko, jeśli typ to `PATIENT`
+    if (type === 'PATIENT') {
+        formData.append('capacity', capacity);
+    }
+
+
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
     fetch(`/edit_room/${roomId}/`, {

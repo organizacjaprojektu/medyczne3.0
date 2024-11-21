@@ -18,11 +18,20 @@
         <label for="type" class="form-label">Type:</label>
         <select class="form-select" name="type" id="type" required>
             <option value="">Select Type</option>
-            <option value="OPERATING">Operating Room</option>
             <option value="CONSULTATION">Consultation Room</option>
+            <option value="PATIENT">Patient Room</option>
+            <option value="TREATMENT">Treatment Room</option>
+            <option value="OPERATING">Operating Room</option>
         </select>
         <div class="invalid-feedback">
             Please select a type.
+        </div>
+    </div>
+    <div class="mb-3" id="capacity-container" style="display: none;">
+        <label for="capacity" class="form-label">Capacity:</label>
+        <input type="number" class="form-control" name="capacity" id="capacity" min="0">
+        <div class="invalid-feedback">
+            Please provide a valid capacity.
         </div>
     </div>
     <div class="mb-3">
@@ -31,3 +40,21 @@
     </div>
     <button type="submit" class="btn btn-primary">Add Room</button>
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('type');
+        const capacityContainer = document.getElementById('capacity-container');
+
+        // Show/hide capacity field based on selected room type
+        typeSelect.addEventListener('change', function () {
+            if (this.value === 'PATIENT') {
+                capacityContainer.style.display = 'block';
+                document.getElementById('capacity').setAttribute('required', 'true');
+            } else {
+                capacityContainer.style.display = 'none';
+                document.getElementById('capacity').removeAttribute('required');
+            }
+        });
+    });
+</script>

@@ -80,6 +80,7 @@ def add_room(request):
     if request.method == 'POST':
         room_number = request.POST.get('room_number')
         room_type = request.POST.get('type')
+        capacity = request.POST.get('capacity')
         description = request.POST.get('description')
 
         if not room_number or not room_type:
@@ -88,7 +89,7 @@ def add_room(request):
                 'rooms': Room.objects.all()
             })
 
-        create_room(room_number, room_type, description)
+        create_room(room_number, room_type, capacity, description)
 
         return render(request, 'room_list.html', {
             'success': 'Room added successfully.',
@@ -213,12 +214,19 @@ def edit_room(request, room_id):
         room_number = request.POST.get('room_number')
         room_type = request.POST.get('type')
         description = request.POST.get('description')
+        capacity = request.POST.get('capacity')  # Pobierz capacity z formularza
 
         try:
             room = Room.objects.get(id=room_id)
             room.room_number = room_number
             room.type = room_type
             room.description = description
+
+            if room_type == 'PATIENT':
+                room.capacity = capacity  # Zapisz capacity tylko dla pokojów typu Patient
+            else:
+                room.capacity = None  # Usuń wartość capacity dla innych typów
+
             room.save()
 
             return JsonResponse({'success': True, 'message': 'Room updated successfully.'})
@@ -239,6 +247,7 @@ def get_room(request, room_id):
         'room_number': room.room_number,
         'type': room.type,
         'description': room.description,
+        'capacity': room.capacity,
     }
     return JsonResponse(data)
 

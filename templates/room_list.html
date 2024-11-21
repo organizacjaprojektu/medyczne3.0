@@ -45,7 +45,12 @@
                                 <select class="form-select" id="edit_type" name="type" required>
                                     <option value="OPERATING">Operating Room</option>
                                     <option value="CONSULTATION">Consultation Room</option>
+                                    <option value="PATIENT">Patient Room</option>
                                 </select>
+                            </div>
+                            <div class="mb-3" id="edit_capacity_container" style="display: none;">
+                                <label for="edit_capacity" class="form-label">Capacity</label>
+                                <input type="number" class="form-control" id="edit_capacity" name="capacity" min="0">
                             </div>
                             <div class="mb-3">
                                 <label for="edit_description" class="form-label">Description</label>
@@ -57,6 +62,7 @@
                 </div>
             </div>
         </div>
+        
     {% endif %}
     <table class="table table-striped mt-3">
         <thead>
