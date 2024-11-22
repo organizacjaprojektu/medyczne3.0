@@ -63,7 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'management.context_processors.user_role_context',
+                'management.helpers.context_processors.user_role_context',
             ],
         },
     },

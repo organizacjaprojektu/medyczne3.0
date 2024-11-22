@@ -1,0 +1,27 @@
+<!-- Assign Patient to Room Modal -->
+<div class="modal fade" id="assignPatientToRoomModal" tabindex="-1" aria-labelledby="assignPatientToRoomModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+       <div class="modal-content">
+           <div class="modal-header">
+               <h5 class="modal-title" id="assignPatientToRoomModalLabel">Assign Patient to Room</h5>
+               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+           </div>
+           <div class="modal-body">
+               <form id="form_assign_patient_to_room">
+                   {% csrf_token %}
+                   <input type="hidden" name="patient_id" id="assign_patient_id">
+                   <div class="mb-3">
+                       <label for="room_id" class="form-label">Room</label>
+                       <select name="room_id" id="room_id" class="form-select" required>
+                           <option value="">Select a room</option>
+                           {% for room in rooms %}
+                               <option value="{{ room.id }}">{{ room.room_number }} - Available: {{ room.get_available_spaces }}</option>
+                           {% endfor %}
+                       </select>
+                   </div>
+                   <button type="submit" class="btn btn-primary">Assign Room</button>
+               </form>
+           </div>
+       </div>
+   </div>
+</div>

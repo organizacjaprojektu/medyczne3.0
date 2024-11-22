@@ -25,10 +25,10 @@
                 <td>{{ patient.first_name }}</td>
                 <td>{{ patient.last_name }}</td>
                 <td>{{ patient.birth_date }}</td>
-                <td>{{ patient.registered_by }}</td>
+                <td>{{ patient.assigned_room.id }}</td>
                 <td>
                     <button class="btn btn-primary" onclick="openEditPatientForm({{ patient.id }})">Edit</button>
-                    <button class="btn btn-secondary" onclick="window.location.href='{% url 'assign_patient_to_room' patient.id %}'">Assign Room</button>
+                    <button class="btn btn-secondary" onclick="openAssignPatientToRoomForm({{ patient.id }})">Assign Room</button>
                     <button class="btn btn-danger" onclick="confirmDeletePatient({{ patient.id }})">Delete</button>
                 </td>
             </tr>
@@ -36,35 +36,7 @@
         </tbody>
     </table>
 
-    <!-- Edit Patient Modal -->
-    <div class="modal fade" id="editPatientModal" tabindex="-1" aria-labelledby="editPatientModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editPatientModalLabel">Edit Patient</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="form_edit_patient">
-                        {% csrf_token %}
-                        <input type="hidden" name="patient_id" id="edit_patient_id">
-                        <div class="mb-3">
-                            <label for="edit_first_name" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="edit_first_name" name="first_name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_last_name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="edit_last_name" name="last_name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_dob" class="form-label">Date of Birth</label>
-                            <input type="date" class="form-control" id="edit_dob" name="dob" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'modals/modal_form_edit_patient.html' %}
+    {% include 'modals/modal_form_assign_patient_to_room.html' %}
     <script src="{% static 'js/patient.js' %}"></script>
 {% endblock %}

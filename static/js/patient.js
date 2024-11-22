@@ -1,3 +1,5 @@
+
+// EDIT PATIENT
 function openEditPatientForm(patientId) {
     fetch(`/get_patient/${patientId}/`)
         .then(response => response.json())
@@ -13,7 +15,7 @@ function openEditPatientForm(patientId) {
             editPatientModal.show();
         });
 }
-
+// EDIT - SUBMIT BUTTON FUNCTIONALITY
 document.getElementById('form_edit_patient').addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -38,17 +40,13 @@ document.getElementById('form_edit_patient').addEventListener('submit', function
             alert(data.message);
             location.reload(); // Reload the page to see the changes
         } else {
-            alert('Error updating patient');
+            alert('Error updating patient' + data.error);
         }
     });
 });
 
-function confirmDeletePatient(patientId) {
-    if (confirm("Are you sure you want to delete this patient?")) {
-        deletePatient(patientId);
-    }
-}
 
+// DELETE PATIENT
 function deletePatient(patientId) {
     fetch(`/delete_patient/${patientId}/`, {
         method: 'DELETE',
@@ -70,6 +68,69 @@ function deletePatient(patientId) {
         alert('An error occurred while trying to delete the patient.');
     });
 }
+
+function confirmDeletePatient(patientId) {
+    if (confirm("Are you sure you want to delete this patient?")) {
+        deletePatient(patientId);
+    }
+}
+
+
+// ASSIGN PATIENT TO ROOM
+   function openAssignPatientToRoomForm(patientId) {
+       fetch(`/get_all_rooms/`)
+           .then(response => response.json())
+           .then(data => {
+               const roomSelect = document.getElementById('room_id');
+               roomSelect.innerHTML = '<option value="">Select a room</option>'; // Clear current options
+
+               data.rooms.forEach(room => {
+                   const option = document.createElement('option');
+                   option.value = room.id;
+                   option.textContent = `${room.room_number} - Available: ${room.available_spaces}`;
+                   roomSelect.appendChild(option);
+               });
+
+               // Set the patient ID in the hidden input
+               document.getElementById('assign_patient_id').value = patientId;
+
+               // Show the modal
+               var assignPatientToRoomModal = new bootstrap.Modal(document.getElementById('assignPatientToRoomModal'));
+               assignPatientToRoomModal.show();
+           })
+           .catch(error => {
+               console.error('Error fetching rooms:', error);
+               alert('An error occurred while fetching room data.');
+           });
+   }
+
+// ASSIGN - SUBMIT BUTTON FUNCTIONALITY
+   document.getElementById('form_assign_patient_to_room').addEventListener('submit', function(event) {
+       event.preventDefault();
+
+       const roomId = document.getElementById('room_id').value;
+       const patientId = document.getElementById('assign_patient_id').value;
+
+       const formData = new FormData();
+       formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+       fetch(`/assign_patient/${patientId}/to-room/${roomId}/`, {
+           method: 'POST',
+           body: formData
+       }).then(response => response.json())
+       .then(data => {
+           if (data.success) {
+               alert(data.message);
+               location.reload();
+           } else {
+               alert(data.error);
+           }
+       })
+       .catch(error => {
+           console.error('Error:', error);
+           alert('An error occurred while assigning the patient to the room.');
+       });
+   });
 
 function getCookie(name) {
     let cookieValue = null;

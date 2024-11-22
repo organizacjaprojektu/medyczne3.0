@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Staff, Patient, Room
+from management.models import Staff, Patient, Room
 
 
 def create_account(password, first_name, last_name, position, role='USER', email=None):

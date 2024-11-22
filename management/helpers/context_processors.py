@@ -1,4 +1,4 @@
-from .models import Staff
+from management.models import Staff
 
 
 def user_role_context(request):
