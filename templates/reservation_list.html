@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Reservation List{% endblock %}
+
+{% block content %}
+<h1 class="mt-4">Reservation List</h1>
+
+{% if user_role == 'ADMIN' %}
+    {% include 'forms/form_add_reservation.html' %}
+{% endif %}
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th scope="col">Patient</th>
+            <th scope="col">Room</th>
+            <th scope="col">Start Date</th>
+            <th scope="col">End Date</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for reservation in reservations %}
+        <tr data-bs-toggle="modal" data-bs-target="#reservationModal" data-reservation-id="{{ reservation.id }}" class="clickable-row">
+            <td>{{ reservation.patient.first_name }} {{ reservation.patient.last_name }}</td>
+            <td>{{ reservation.room.name }} ({{ reservation.room.room_number }})</td>
+            <td>{{ reservation.start_date }}</td>
+            <td>{{ reservation.end_date }}</td>
+            <td>
+                <button class="btn btn-danger" onclick="confirmDeleteReservation({{ reservation.id }})">Delete</button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- Reservation Details Modal -->
+<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reservationModalLabel">Reservation Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Patient:</strong> <span id="modal-patient"></span></p>
+                <p><strong>Room:</strong> <span id="modal-room"></span></p>
+                <p><strong>Start Date:</strong> <span id="modal-start-date"></span></p>
+                <p><strong>End Date:</strong> <span id="modal-end-date"></span></p>
+                <p><strong>Description:</strong> <span id="modal-description"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/reservation.js"></script>
+{% endblock %}
+
+

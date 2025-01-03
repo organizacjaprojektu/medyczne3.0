@@ -1,10 +1,3 @@
-{% if error %}
-    <p class="text-danger">{{ error }}</p>
-{% endif %}
-{% if success %}
-    <p class="text-success">{{ success }}</p>
-{% endif %}
-
 <form method="post" action="{% url 'add_room' %}" class="needs-validation" novalidate>
     {% csrf_token %}
     <div class="mb-3">
@@ -28,6 +21,13 @@
     <div class="mb-3">
         <label for="description" class="form-label">Description:</label>
         <textarea class="form-control" name="description" id="description"></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="capacity" class="form-label">Capacity:</label>
+        <input type="number" class="form-control" name="capacity" id="capacity" required>
+        <div class="invalid-feedback">
+            Please provide the room's capacity.
+        </div>
     </div>
     <button type="submit" class="btn btn-primary">Add Room</button>
 </form>

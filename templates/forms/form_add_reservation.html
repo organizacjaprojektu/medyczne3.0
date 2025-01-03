@@ -1,0 +1,202 @@
+{% block content %}
+{% if error %}
+    <p class="text-danger">{{ error }}</p>
+{% endif %}
+{% if success %}
+    <p class="text-success">{{ success }}</p>
+{% endif %}
+
+<form method="post" action="{% url 'add_reservation' %}" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="patient_id" class="form-label">Select Patient:</label>
+        <select class="form-control" name="patient_id" id="patient_id" required>
+            <option value="">--Select Patient--</option>
+            {% for patient in patients %}
+                <option value="{{ patient.id }}">{{ patient.first_name }} {{ patient.last_name }}</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please select a patient.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="room_id" class="form-label">Select Room:</label>
+        <select class="form-control" name="room_id" id="room_id" required>
+            <option value="">--Select Room--</option>
+            {% for room in rooms %}
+                <option value="{{ room.id }}">{{ room.name }} ({{ room.room_number }})</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please select a room.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="reservation_start_date" class="form-label">Start Date:</label>
+        <input type="text" class="form-control" name="start_date" id="reservation_start_date" placeholder="Click to select a date" readonly required>
+        <div class="invalid-feedback">Please select a start date.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="reservation_end_date" class="form-label">End Date:</label>
+        <input type="text" class="form-control" name="end_date" id="reservation_end_date" placeholder="Click to select a date" readonly required>
+        <div class="invalid-feedback">Please select an end date.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Description:</label>
+        <textarea class="form-control" name="description" id="description" rows="3" placeholder="Enter a description (optional)"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Make Reservation</button>
+</form>
+
+<!-- Calendar Modal -->
+<div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="calendarModalLabel">Select a Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="calendar"></div>
+                <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-secondary" id="prevMonth">Previous Month</button>
+                    <button class="btn btn-secondary" id="nextMonth">Next Month</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const roomSelect = document.getElementById('room_id');
+    const startDateInput = document.getElementById('reservation_start_date');
+    const endDateInput = document.getElementById('reservation_end_date');
+    const calendarModal = new bootstrap.Modal(document.getElementById('calendarModal'));
+    let selectedDateInput = null;
+    let currentRoomId = null;
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    function fetchAvailability(month, year) {
+        if (!currentRoomId) return;
+        fetch(`/room_availability/${currentRoomId}?month=${month + 1}&year=${year}`)
+            .then(response => response.json())
+            .then(data => renderCalendar(data, month, year));
+    }
+
+    function renderCalendar(availability, month, year) {
+        console.log('Availability:', availability);
+
+        const calendar = document.getElementById('calendar');
+        calendar.innerHTML = '';
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+
+        const header = document.createElement('div');
+        header.className = 'text-center mb-3';
+        header.innerHTML = `<h5>${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}</h5>`;
+        calendar.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.className = 'calendar-grid';
+        calendar.appendChild(grid);
+
+        for (let i = 0; i < firstDay; i++) {
+            const blankCell = document.createElement('div');
+            blankCell.className = 'calendar-cell blank';
+            grid.appendChild(blankCell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const availableBeds = availability[dateStr] || 0;
+
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            cell.innerHTML = `<div>${day}</div><div>${availableBeds} beds</div>`;
+            if (availableBeds > 0) {
+                cell.classList.add('available');
+                cell.addEventListener('click', () => {
+                    selectedDateInput.value = dateStr;
+                    calendarModal.hide();
+                });
+            } else {
+                cell.classList.add('unavailable');
+            }
+            grid.appendChild(cell);
+        }
+    }
+
+    roomSelect.addEventListener('change', () => {
+        currentRoomId = roomSelect.value;
+        if (currentRoomId) fetchAvailability(currentMonth, currentYear);
+    });
+
+    [startDateInput, endDateInput].forEach(input => {
+        input.addEventListener('click', () => {
+            if (!currentRoomId) {
+                alert('Please select a room first.');
+                return;
+            }
+            selectedDateInput = input;
+            fetchAvailability(currentMonth, currentYear);
+            calendarModal.show();
+        });
+    });
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        fetchAvailability(currentMonth, currentYear);
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        fetchAvailability(currentMonth, currentYear);
+    });
+});
+</script>
+
+
+<style>
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.calendar-cell {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.calendar-cell.available {
+    background-color: #d4edda;
+}
+
+.calendar-cell.unavailable {
+    background-color: #f8d7da;
+    cursor: not-allowed;
+}
+
+.calendar-cell.blank {
+    background-color: transparent;
+    border: none;
+}
+</style>

@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
 class Room(models.Model):
     ROOM_TYPES = [
         ('OPERATING', 'Operating room'),
@@ -11,6 +10,8 @@ class Room(models.Model):
     type = models.CharField(max_length=20, choices=ROOM_TYPES)
     description = models.TextField(blank=True, null=True)
     room_number = models.BigIntegerField()
+    capacity = models.PositiveIntegerField()
+
 
     def __str__(self):
         return f"{self.name} ({self.type})"
@@ -40,3 +41,14 @@ class Staff(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.position})"
+
+
+class Reservation(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Reservation for {self.patient} in {self.room} ({self.start_date} to {self.end_date})"
