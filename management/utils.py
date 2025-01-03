@@ -31,13 +31,14 @@ def create_patient(first_name, last_name, dob):
     return patient
 
 
-def create_room(room_number, room_type, description):
+def create_room(room_number, room_type, description, capacity):
     """
     Create a new room in the database.
     """
     room = Room.objects.create(
         room_number=room_number,
         type=room_type,
-        description=description
+        description=description,
+        capacity=capacity
     )
     return room

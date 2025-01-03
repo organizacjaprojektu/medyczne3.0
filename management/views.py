@@ -1,11 +1,142 @@
 from django.contrib.auth.views import LoginView
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.http import JsonResponse, Http404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from datetime import datetime, timedelta
 
 from .decorators import role_required
-from .models import Patient, Room, Staff
+from .models import Patient, Room, Staff, Reservation
 from .utils import create_account, create_room, create_patient
+
+
+@login_required
+def reservation_details(request, reservation_id):
+    try:
+        reservation = Reservation.objects.get(id=reservation_id)
+
+        data = {
+            'patient': {
+                'first_name': reservation.patient.first_name,
+                'last_name': reservation.patient.last_name
+            },
+            'room': {
+                'name': reservation.room.name,
+                'room_number': reservation.room.room_number
+            },
+            'start_date': reservation.start_date.strftime('%Y-%m-%d'),
+            'end_date': reservation.end_date.strftime('%Y-%m-%d'),
+            'description': reservation.description or 'No description provided',  # Handle missing description
+        }
+        return JsonResponse(data)
+
+    except Reservation.DoesNotExist:
+        return JsonResponse({'error': 'Reservation not found'}, status=404)
+
+
+def room_availability(request, room_id):
+    month = int(request.GET.get('month', datetime.now().month))
+    year = int(request.GET.get('year', datetime.now().year))
+
+    try:
+        room = Room.objects.get(id=room_id)
+    except Room.DoesNotExist:
+        return JsonResponse({"error": "Room not found"}, status=404)
+
+    start_date = datetime(year, month, 1).date()
+    end_date = (start_date + timedelta(days=31)).replace(day=1) - timedelta(days=1)
+    dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+
+    reservations = Reservation.objects.filter(
+        room=room,
+        start_date__lte=end_date,
+        end_date__gte=start_date
+    )
+
+    availability = {}
+    for date in dates:
+        date_str = date.strftime('%Y-%m-%d')
+        booked_beds = reservations.filter(start_date__lte=date, end_date__gte=date).count()
+        availability[date_str] = room.capacity - booked_beds
+
+    return JsonResponse(availability, safe=False)
+
+
+@login_required
+@role_required('ADMIN')
+def reservation_list(request):
+    reservations = Reservation.objects.all()
+    patients = Patient.objects.all()
+    rooms = Room.objects.all()
+    return render(request, 'reservation_list.html', {
+        'reservations': reservations,
+        'patients': patients,
+        'rooms': rooms
+    })
+
+
+@login_required
+@role_required('ADMIN')
+def add_reservation(request):
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient_id')
+        room_id = request.POST.get('room_id')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        description = request.POST.get('description')
+
+        if not patient_id or not room_id or not start_date or not end_date:
+            return render(request, 'reservation_list.html', {
+                'error': 'All fields are required.',
+                'reservations': Reservation.objects.all(),
+                'patients': Patient.objects.all(),
+                'rooms': Room.objects.all()
+            })
+
+        existing_reservations = Reservation.objects.filter(
+            room_id=room_id,
+            start_date__lte=end_date,
+            end_date__gte=start_date
+        )
+        if existing_reservations.count() >= Room.objects.get(id=room_id).room_number:
+            return render(request, 'reservation_list.html', {
+                'error': 'Room is fully booked for the selected dates.',
+                'reservations': Reservation.objects.all(),
+                'patients': Patient.objects.all(),
+                'rooms': Room.objects.all()
+            })
+
+        patient = Patient.objects.get(id=patient_id)
+        room = Room.objects.get(id=room_id)
+        Reservation.objects.create(
+            patient=patient,
+            room=room,
+            start_date=start_date,
+            end_date=end_date,
+            description = description
+        )
+
+        return render(request, 'reservation_list.html', {
+            'success': 'Reservation created successfully.',
+            'reservations': Reservation.objects.all(),
+            'patients': Patient.objects.all(),
+            'rooms': Room.objects.all(),
+
+        })
+
+
+@login_required
+@role_required('ADMIN')
+def delete_reservation(request, reservation_id):
+    if request.method == 'DELETE':
+        try:
+            reservation = Reservation.objects.get(id=reservation_id)
+            reservation.delete()
+            return JsonResponse({'success': True, 'message': 'Reservation deleted successfully.'})
+        except Reservation.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Reservation not found.'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
 
 
 @login_required
@@ -81,6 +212,7 @@ def add_room(request):
         room_number = request.POST.get('room_number')
         room_type = request.POST.get('type')
         description = request.POST.get('description')
+        capacity = request.POST.get('capacity')
 
         if not room_number or not room_type:
             return render(request, 'room_list.html', {
@@ -88,7 +220,7 @@ def add_room(request):
                 'rooms': Room.objects.all()
             })
 
-        create_room(room_number, room_type, description)
+        create_room(room_number, room_type, description, capacity)
 
         return render(request, 'room_list.html', {
             'success': 'Room added successfully.',

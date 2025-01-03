@@ -51,6 +51,10 @@
                                 <label for="edit_description" class="form-label">Description</label>
                                 <textarea class="form-control" id="edit_description" name="description"></textarea>
                             </div>
+                            <div class="mb-3">
+                                <label for="edit_capacity" class="form-label">Capacity</label>
+                                <input type="number" class="form-control" id="edit_capacity" name="capacity" required>
+                            </div>
                             <button type="submit" class="btn btn-primary">Save changes</button>
                         </form>
                     </div>
@@ -64,6 +68,7 @@
                 <th scope="col">Room Number</th>
                 <th scope="col">Type</th>
                 <th scope="col">Description</th>
+                <th scope="col">Capacity</th>
                 <th scope="col">Actions</th>
             </tr>
         </thead>
@@ -73,6 +78,7 @@
                 <td>{{ room.room_number }}</td>
                 <td>{{ room.type }}</td>
                 <td>{{ room.description }}</td>
+                <td>{{ room.capacity }}</td>
                 <td>
                     <button class="btn btn-primary" onclick="openEditRoomForm({{ room.id }})">Edit</button>
                     <button class="btn btn-danger" onclick="confirmDeleteRoom({{ room.id }})">Delete</button>
