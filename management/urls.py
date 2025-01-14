@@ -29,4 +29,10 @@ urlpatterns = [
     path('room_availability/<int:room_id>/', views.room_availability, name='room_availability'),
     path('room_availability/<int:room_id>/', views.room_availability, name='room_availability'),
     path('reservation_details/<int:reservation_id>/', views.reservation_details, name='reservation_details'),
+    path('patient/<int:patient_id>/reservations/', views.patient_reservations, name='patient_reservations'),
+    path('get_reservation/<int:reservation_id>/', views.get_reservation, name='get_reservation'),
+    path('edit_reservation/', views.edit_reservation, name='edit_reservation'),
+    path('room_reservations/<int:room_id>/', views.room_reservations, name='room_reservations')
+
+
 ]

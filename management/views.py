@@ -62,7 +62,6 @@ def room_availability(request, room_id):
 
 
 @login_required
-@role_required('ADMIN')
 def reservation_list(request):
     reservations = Reservation.objects.all()
     patients = Patient.objects.all()
@@ -73,9 +72,19 @@ def reservation_list(request):
         'rooms': rooms
     })
 
+@login_required
+def patient_reservations(request, patient_id):
+    try:
+        patient = Patient.objects.get(id=patient_id)
+        reservations = Reservation.objects.filter(patient=patient).order_by('-start_date')
+        return render(request, 'patient_reservations.html', {
+            'patient': patient,
+            'reservations': reservations,
+        })
+    except Patient.DoesNotExist:
+        raise Http404("Patient not found")
 
 @login_required
-@role_required('ADMIN')
 def add_reservation(request):
     if request.method == 'POST':
         patient_id = request.POST.get('patient_id')
@@ -229,7 +238,7 @@ def add_room(request):
 
     return render(request, 'room_list.html', {'rooms': Room.objects.all()})
 
-@login_required
+
 @login_required
 @role_required('ADMIN')
 def edit_patient(request):
@@ -282,6 +291,62 @@ def delete_patient(request, patient_id):
             return JsonResponse({'success': False, 'error': str(e)})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+@login_required
+@role_required('ADMIN')
+def get_reservation(request, reservation_id):
+    try:
+        reservation = Reservation.objects.select_related('patient', 'room').get(id=reservation_id)
+        data = {
+            'id': reservation.id,
+            'patient_id': reservation.patient.id,
+            'room_id': reservation.room.id,
+            'start_date': reservation.start_date.isoformat(),
+            'end_date': reservation.end_date.isoformat(),
+            'description': reservation.description or '',
+        }
+        return JsonResponse(data)
+    except Reservation.DoesNotExist:
+        return JsonResponse({'error': 'Reservation not found'}, status=404)
+
+@login_required
+@role_required('ADMIN')
+def edit_reservation(request):
+    if request.method == 'POST':
+        try:
+            reservation_id = request.POST.get('reservation_id')
+            patient_id = request.POST.get('patient_id')
+            room_id = request.POST.get('room_id')
+            start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
+            description = request.POST.get('description')
+
+            if not all([reservation_id, patient_id, room_id, start_date, end_date]):
+                return JsonResponse({'success': False, 'error': 'All fields are required.'})
+
+            reservation = Reservation.objects.get(id=reservation_id)
+            reservation.patient_id = patient_id
+            reservation.room_id = room_id
+            reservation.start_date = start_date
+            reservation.end_date = end_date
+            reservation.description = description
+            reservation.save()
+
+            return JsonResponse({'success': True, 'message': 'Reservation updated successfully.'})
+        except Reservation.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Reservation not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+@login_required
+def room_reservations(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    reservations = Reservation.objects.filter(room=room).order_by('-start_date')
+    return render(request, 'room_reservations.html', {
+        'room': room,
+        'reservations': reservations,
+    })
 
 @login_required
 @role_required('ADMIN')

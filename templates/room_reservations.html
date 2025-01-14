@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Room Reservations{% endblock %}
+
+{% block content %}
+<h1 class="mt-4">Reservations for Room {{ room.room_number }}</h1>
+<p>Room Type: {{ room.type }}</p>
+<p>Capacity: {{ room.capacity }}</p>
+<p>Description: {{ room.description }}</p>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th scope="col">Patient</th>
+            <th scope="col">Start Date</th>
+            <th scope="col">End Date</th>
+            <th scope="col">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reservation in reservations %}
+        <tr>
+            <td>{{ reservation.patient.first_name }} {{ reservation.patient.last_name }}</td>
+            <td>{{ reservation.start_date }}</td>
+            <td>{{ reservation.end_date }}</td>
+            <td>{{ reservation.description }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">No reservations for this room.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'room_list' %}" class="btn btn-secondary mt-3">Back to Rooms</a>
+{% endblock %}
