@@ -44,7 +44,7 @@ def room_availability(request, room_id):
 
     start_date = datetime(year, month, 1).date()
     end_date = (start_date + timedelta(days=31)).replace(day=1) - timedelta(days=1)
-    dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+    dates = [start_date + timedelta(days=i) for i in range(-1, (end_date - start_date).days + 1)]
 
     reservations = Reservation.objects.filter(
         room=room,
@@ -62,17 +62,21 @@ def room_availability(request, room_id):
 
 
 @login_required
-@role_required('ADMIN')
 def reservation_list(request):
-    reservations = Reservation.objects.all()
-    patients = Patient.objects.all()
-    rooms = Room.objects.all()
+    error = request.session.pop('form_error', None)
+    success = request.session.pop('form_success', None)
     return render(request, 'reservation_list.html', {
-        'reservations': reservations,
-        'patients': patients,
-        'rooms': rooms
+        'reservations': Reservation.objects.all(),
+        'patients': Patient.objects.all(),
+        'rooms': Room.objects.all(),
+        'error': error,
+        'success': success,
     })
 
+
+
+from django.shortcuts import redirect
+from django.urls import reverse
 
 @login_required
 @role_required('ADMIN')
@@ -85,12 +89,8 @@ def add_reservation(request):
         description = request.POST.get('description')
 
         if not patient_id or not room_id or not start_date or not end_date:
-            return render(request, 'reservation_list.html', {
-                'error': 'All fields are required.',
-                'reservations': Reservation.objects.all(),
-                'patients': Patient.objects.all(),
-                'rooms': Room.objects.all()
-            })
+            request.session['form_error'] = 'All fields are required.'
+            return redirect(reverse('reservation_list'))
 
         existing_reservations = Reservation.objects.filter(
             room_id=room_id,
@@ -98,12 +98,8 @@ def add_reservation(request):
             end_date__gte=start_date
         )
         if existing_reservations.count() >= Room.objects.get(id=room_id).room_number:
-            return render(request, 'reservation_list.html', {
-                'error': 'Room is fully booked for the selected dates.',
-                'reservations': Reservation.objects.all(),
-                'patients': Patient.objects.all(),
-                'rooms': Room.objects.all()
-            })
+            request.session['form_error'] = 'Room is fully booked for the selected dates.'
+            return redirect(reverse('reservation_list'))
 
         patient = Patient.objects.get(id=patient_id)
         room = Room.objects.get(id=room_id)
@@ -112,16 +108,15 @@ def add_reservation(request):
             room=room,
             start_date=start_date,
             end_date=end_date,
-            description = description
+            description=description
         )
 
-        return render(request, 'reservation_list.html', {
-            'success': 'Reservation created successfully.',
-            'reservations': Reservation.objects.all(),
-            'patients': Patient.objects.all(),
-            'rooms': Room.objects.all(),
+        request.session['form_success'] = 'Reservation created successfully.'
+        return redirect(reverse('reservation_list'))
 
-        })
+    # If not a POST request, just redirect to the reservation list
+    return redirect(reverse('reservation_list'))
+
 
 
 @login_required
@@ -141,19 +136,38 @@ def delete_reservation(request, reservation_id):
 
 @login_required
 def staff_list(request):
+    error = request.session.pop('form_error', None)
+    success = request.session.pop('form_success', None)
     staff_members = Staff.objects.all()
-    return render(request, 'staff_list.html', {'staff_members': staff_members})
+    return render(request, 'staff_list.html', {
+        'staff_members': staff_members,
+        'error': error,
+        'success': success
+    })
 
 @login_required
 def patient_list(request):
+    error = request.session.pop('form_error', None)
+    success = request.session.pop('form_success', None)
     patients = Patient.objects.all()
-    return render(request, 'patient_list.html', {'patients': patients})
+    return render(request, 'patient_list.html', {
+        'patients': patients,
+        'error': error,
+        'success': success
+    })
 
 
 @login_required
 def room_list(request):
+    error = request.session.pop('form_error', None)
+    success = request.session.pop('form_success', None)
     rooms = Room.objects.all()
-    return render(request, 'room_list.html', {'rooms': rooms})
+    return render(request, 'room_list.html', {
+        'rooms': rooms,
+        'error': error,
+        'success': success
+    })
+
 
 
 @login_required
@@ -167,19 +181,15 @@ def add_staff(request):
         role = request.POST.get('role', 'USER')  # Default role is 'USER'
 
         if not password or not first_name or not last_name or not position:
-            return render(request, 'staff_list.html', {
-                'error': 'All fields are required.',
-                'staff_members': Staff.objects.all()
-            })
+            request.session['form_error'] = 'All fields are required.'
+            return redirect('staff_list')
 
         create_account(password, first_name, last_name, position, role=role)
 
-        return render(request, 'staff_list.html', {
-            'success': 'Account created successfully.',
-            'staff_members': Staff.objects.all()
-        })
+        request.session['form_success'] = 'Account created successfully.'
+        return redirect('staff_list')
 
-    return render(request, 'staff_list.html', {'staff_members': Staff.objects.all()})
+    return redirect('staff_list')
 
 @login_required
 @role_required('ADMIN')
@@ -190,19 +200,15 @@ def add_patient(request):
         dob = request.POST.get('dob')
 
         if not first_name or not last_name or not dob:
-            return render(request, 'patient_list.html', {
-                'error': 'All fields are required.',
-                'patients': Patient.objects.all()
-            })
+            request.session['form_error'] = 'All fields are required.'
+            return redirect('patient_list')
 
         create_patient(first_name, last_name, dob)
 
-        return render(request, 'patient_list.html', {
-            'success': 'Patient added successfully.',
-            'patients': Patient.objects.all()
-        })
+        request.session['form_success'] = 'Patient added successfully.'
+        return redirect('patient_list')
 
-    return render(request, 'patient_list.html', {'patients': Patient.objects.all()})
+    return redirect('patient_list')
 
 
 @login_required
@@ -215,19 +221,15 @@ def add_room(request):
         capacity = request.POST.get('capacity')
 
         if not room_number or not room_type:
-            return render(request, 'room_list.html', {
-                'error': 'Fields required: Room number, Type',
-                'rooms': Room.objects.all()
-            })
+            request.session['form_error'] = 'Fields required: Room number, Type'
+            return redirect('room_list')
 
         create_room(room_number, room_type, description, capacity)
 
-        return render(request, 'room_list.html', {
-            'success': 'Room added successfully.',
-            'rooms': Room.objects.all()
-        })
+        request.session['form_success'] = 'Room added successfully.'
+        return redirect('room_list')
 
-    return render(request, 'room_list.html', {'rooms': Room.objects.all()})
+    return redirect('room_list')
 
 @login_required
 @login_required

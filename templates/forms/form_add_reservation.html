@@ -107,6 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
         grid.className = 'calendar-grid';
         calendar.appendChild(grid);
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         for (let i = 0; i < firstDay; i++) {
             const blankCell = document.createElement('div');
             blankCell.className = 'calendar-cell blank';
@@ -121,15 +124,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const cell = document.createElement('div');
             cell.className = 'calendar-cell';
             cell.innerHTML = `<div>${day}</div><div>${availableBeds} beds</div>`;
-            if (availableBeds > 0) {
+
+            if (date < today || availableBeds <= 0) {
+                cell.classList.add('unavailable');
+                cell.style.cursor = 'not-allowed';
+            } else {
                 cell.classList.add('available');
                 cell.addEventListener('click', () => {
                     selectedDateInput.value = dateStr;
                     calendarModal.hide();
                 });
-            } else {
-                cell.classList.add('unavailable');
             }
+
             grid.appendChild(cell);
         }
     }
